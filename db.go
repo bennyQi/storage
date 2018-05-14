@@ -2,26 +2,17 @@ package main
 
 import (
 	"fmt"
-	//"sync"
-	//"github.com/pkg/errors"
+	"sync"
 )
 
-type LabelPairsRef map[string]uint64
-type LabelRef map[uint64]string
-type RefLabel map[string]uint64
-type Label2Series map[uint64][]uint64
-type FastReg map[uint64]struct{}
-
 type DB struct {
-	Mat       *Matrix
-	Meta      map[uint64]*SeriesMeta
-	Serieses  map[uint64]*Series
-	LPR       LabelPairsRef
-	LR        LabelRef
-	L2S       Label2Series
-	FR        FastReg
-	LifeCycle int64
-	Dir       string
+	Mat        *Matrix
+	Meta       map[uint64]*SeriesMeta
+	Serieses   map[uint64]*Series
+	LabelTable *LabelTable
+	LifeCycle  int64
+	Dir        string
+	sync.Mutex
 }
 
 func (d *DB) Check() {
@@ -39,13 +30,10 @@ func OpenDB(dir string, lifeCycle int64) *DB {
 	}
 	mat := NewMatrix(16, 10)
 	db := &DB{
-		Mat:      mat,
-		Meta:     make(map[uint64]*SeriesMeta),
-		Serieses: make(map[uint64]*Series),
-		LPR:      make(map[string]uint64),
-		LR:       make(map[uint64]string),
-		L2S:      make(map[uint64][]uint64),
-		FR:       make(map[uint64]struct{}),
+		Mat:        mat,
+		Meta:       make(map[uint64]*SeriesMeta),
+		Serieses:   make(map[uint64]*Series),
+		LabelTable: NewLabelTable(),
 	}
 	return db
 }
@@ -61,10 +49,10 @@ func (d *DB) Append(samples []Sample) (fast uint64, err error) {
 		if sm, ok := d.Meta[s.Fast]; ok {
 			sm.UpdateStatic(s.Date, s.Value)
 		} else {
-			sm := &SeriesMeta{Statics: make([]Static, 4, 4)}
+			relations := d.LabelTable.Add(s.Lables)
+			sm := &SeriesMeta{Statics: make([]Static, 4, 4), Relations: relations}
 			sm.UpdateStatic(s.Date, s.Value)
-			hashes := labels.Hashes()
-			d.Mat.Add(s.Fast, hashes...)
+			d.Mat.Add(s.Fast, relations...)
 		}
 		if series, ok := d.Serieses[s.Fast]; ok {
 			series.Pairs = append(series.Pairs, TimeValue{Time: s.Date, Value: s.Value})

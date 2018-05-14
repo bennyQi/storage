@@ -21,7 +21,7 @@ type QueryResult struct {
 }
 
 func (q *QueryResult) Next() (labelpairs []string, tvs []TimeValue, err error) {
-	q.Lock()
+	/*q.Lock()
 	defer q.Unlock()
 	for {
 		if q.at+1 > len(q.serieses) {
@@ -59,7 +59,8 @@ func (q *QueryResult) Next() (labelpairs []string, tvs []TimeValue, err error) {
 			}
 			tvs = series.Pairs[start:end]
 		}
-	}
+	}*/
+	return nil, nil, nil
 
 }
 

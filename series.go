@@ -16,14 +16,14 @@ type Static struct {
 	Value float64
 }
 type SeriesMeta struct {
-	Ref        uint64
-	LabelPairs []string
-	Statics    []Static //min,max,sum,avg
-	Count      int64
-	Offset     int64
-	Internal   int64
-	StartDate  int64
-	EndDate    int64
+	Ref       uint64
+	Relations []uint64
+	Statics   []Static //min,max,sum,avg
+	Count     int64
+	Offset    int64
+	Internal  int64
+	StartDate int64
+	EndDate   int64
 }
 
 func (s *SeriesMeta) UpdateStatic(t int64, v float64) {
